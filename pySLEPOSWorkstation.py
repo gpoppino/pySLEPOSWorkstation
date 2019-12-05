@@ -17,8 +17,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import re
 import sys
 import getopt
+import socket
 import subprocess
 
 class WorkstationModelParser:
@@ -27,11 +29,13 @@ class WorkstationModelParser:
         self.__branchDict = {}
         self.__currentWorkstationDict = {}
         self.__workstations = []
+        self.__skip = False
+
+        self.__modelValidator = ModelValidator()
 
     def __addWorkstation(self):
         if self.__currentWorkstationDict != {}:
             self.__workstations.append(self.__currentWorkstationDict)
-        self.__currentWorkstationDict = {}
 
     def __insertBranchAttribute(self, key, value):
         self.__branchDict[ key ] = value
@@ -39,16 +43,25 @@ class WorkstationModelParser:
     def insertAttribute(self, line):
         line = line.strip()
         if line == "":
-            self.__addWorkstation()
+            if not self.__skip:
+                self.__addWorkstation()
+            self.__currentWorkstationDict = {}
+            self.__skip = False
             return
 
         data = line.split(":", 1)
+        value = data[1].strip()
 
-        if data[0] in ["c", "o", "ou", "store"]:
-            self.__insertBranchAttribute(data[0], data[1].strip())
+        if self.__modelValidator.isBranchAttribute(data[0]):
+            self.__insertBranchAttribute(data[0], value)
             return
 
-        self.__currentWorkstationDict[ data[0] ] = data[1].strip()
+        if self.__modelValidator.isWorkstationAttribute(data[0]):
+            if self.__modelValidator.validateWorkstationValue(data[0], value):
+                self.__currentWorkstationDict[ data[0] ] = value
+            else:
+                self.__skip = True
+                return
 
     def getWorkstations(self):
         return self.__workstations
@@ -56,8 +69,58 @@ class WorkstationModelParser:
     def getBranch(self):
         return self.__branchDict
 
+    def validate(self):
+        return self.__modelValidator.isBranchComplete(self.__branchDict)
+
     def __repr__(self):
         return "Branch: %s\nWorkstations: %s" % (self.__branchDict, self.__workstations)
+
+
+class ModelValidator:
+
+    def __init__(self):
+        self.__validBranchAttributes = ['c', 'o', 'ou', 'store']
+        self.__validWorkstationAttributes = ['cn', 'ipAddress', 'macAddress', 'cashRegisterType', 'cashRegisterDN', \
+            'roleBased', 'roleDN']
+
+    def isBranchAttribute(self, attr):
+        return attr in self.__validBranchAttributes
+
+    def isWorkstationAttribute(self, attr):
+        return attr in self.__validWorkstationAttributes
+
+    def isBranchComplete(self, branch):
+        attrs = branch.keys()
+        for key in self.__validBranchAttributes:
+            if key not in attrs:
+                return False
+        return True
+
+    def validateWorkstationValue(self, attr, value):
+        if attr == 'ipAddress':
+            return self.isIPv4Address(value)
+
+        if attr == 'macAddress':
+            return self.isMACAddress(value)
+
+        return True
+
+    def isIPv4Address(self, ipAddress):
+        try:
+            socket.inet_pton(socket.AF_INET, ipAddress)
+        except AttributeError:  # no inet_pton here, sorry
+            try:
+                socket.inet_aton(ipAddress)
+            except socket.error:
+                return False
+            return ipAddress.count('.') == 3
+        except socket.error:  # not a valid address
+            return False
+
+        return True
+
+    def isMACAddress(self, mac):
+        return re.match("[0-9a-f]{2}([-:]?)[0-9a-f]{2}(\\1[0-9a-f]{2}){4}$", mac.lower())
 
 
 class WorkstationFileReader:
@@ -69,6 +132,7 @@ class WorkstationFileReader:
         with open(self.__filename) as f:
             for line in f:
                 workstationModelParser.insertAttribute(line)
+
 
 class WorkstationCreator:
 
@@ -153,6 +217,10 @@ def main(argv):
     f = getStoreModelFile(argv)
     workstationFileReader = WorkstationFileReader(f)
     workstationFileReader.populateModel(workstationModelParser)
+
+    if not workstationModelParser.validate():
+        print("Imcomplete or invalid data in model file! Aborting...")
+        return 1
 
     workstationCreator = WorkstationCreator(workstationModelParser.getBranch(), workstationModelParser.getWorkstations())
     workstationCreator.createWorkstations()
