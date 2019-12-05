@@ -81,15 +81,15 @@ class WorkstationCreator:
 
     def createWorkstations(self):
         for workstation in self.__workstations:
+            posAdminCmd = ["/usr/sbin/posAdmin", "--base", self.__buildLDAPBase(), "--add", "--scWorkstation", \
+                "--cn", workstation['cn'], "--ipHostNumber", workstation['ipAddress'], \
+                "--macAddress", workstation['macAddress'].upper(), "--scRefPcDn", workstation['cashRegisterDN'], \
+                "--scPosRegisterType", workstation['cashRegisterType']]
             if workstation['roleBased'].upper() == "TRUE":
-                subprocess.call(["/usr/sbin/posAdmin", "--base", self.__buildLDAPBase(), "--add", "--scWorkstation", \
-                    "--cn", workstation['cn'], "--ipHostNumber", workstation['ipAddress'], "--macAddress", workstation['macAddress'].upper(), \
-                    "--scRoleBased", "TRUE", "--scRefPcDn", workstation['cashRegisterDN'], "--scPosRegisterType", workstation['cashRegisterType'], \
-                    "--scRoleDn", workstation['roleDN']])
+                posAdminCmd += ["--scRoleBased", "TRUE", "--scRoleDn", workstation['roleDN']]
             else:
-                subprocess.call(["/usr/sbin/posAdmin", "--base", self.__buildLDAPBase(), "--add", "--scWorkstation", \
-                    "--cn", workstation['cn'], "--ipHostNumber", workstation['ipAddress'], "--macAddress", workstation['macAddress'].upper(), \
-                    "--scRoleBased", "FALSE", "--scRefPcDn", workstation['cashRegisterDN'], "--scPosRegisterType", workstation['cashRegisterType']])
+                posAdminCmd += ["--scRoleBased", "FALSE"]
+            subprocess.call(posAdminCmd)
 
 def showHelp(cmd):
     print cmd + " -i model"
