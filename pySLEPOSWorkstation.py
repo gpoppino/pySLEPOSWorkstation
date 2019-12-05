@@ -80,16 +80,53 @@ class WorkstationCreator:
         return "cn=" + self.__branch['store'] + ",ou=" + self.__branch['ou'] + ",o=" + self.__branch['o'] + ",c=" + self.__branch['c']
 
     def createWorkstations(self):
+
+        resultsProcessor = ResultsProcessor(self.__branch)
+
         for workstation in self.__workstations:
             posAdminCmd = ["/usr/sbin/posAdmin", "--base", self.__buildLDAPBase(), "--add", "--scWorkstation", \
                 "--cn", workstation['cn'], "--ipHostNumber", workstation['ipAddress'], \
                 "--macAddress", workstation['macAddress'].upper(), "--scRefPcDn", workstation['cashRegisterDN'], \
                 "--scPosRegisterType", workstation['cashRegisterType']]
+
             if workstation['roleBased'].upper() == "TRUE":
                 posAdminCmd += ["--scRoleBased", "TRUE", "--scRoleDn", workstation['roleDN']]
             else:
                 posAdminCmd += ["--scRoleBased", "FALSE"]
-            subprocess.call(posAdminCmd)
+
+            retValue = subprocess.call(posAdminCmd)
+
+            resultsProcessor.showResult(workstation, retValue)
+
+        resultsProcessor.showSummary()
+
+class ResultsProcessor:
+
+    def __init__(self, branch):
+        self.__branch = branch
+        self.__failedCounter = 0
+        self.__addedWorkstations = []
+        self.__failedWorkstations = []
+
+    def showResult(self, workstation, retValue):
+        msg = "Store: " + self.__branch['store'] + ". Workstation: " + workstation['cn']
+
+        if retValue == 0:
+            print(msg + "... added successfully!")
+            self.__addedWorkstations.append(workstation['cn'])
+        else:
+            print(msg + "... failed to be added :-(")
+            self.__failedCounter += 1
+            self.__failedWorkstations.append(workstation['cn'])
+
+    def showSummary(self):
+        print("== Summary for Store %s =="% self.__branch['store'])
+        print("Successfully added workstations:")
+        print(self.__addedWorkstations)
+        print("Failed workstations:")
+        print(self.__failedWorkstations)
+        print("Failed counter: %d"% self.__failedCounter)
+
 
 def showHelp(cmd):
     print cmd + " -i model"
