@@ -81,7 +81,7 @@ class WorkstationCreator:
 
     def createWorkstations(self):
         for workstation in self.__workstations:
-            if workstation['roleBased'] == "True":
+            if workstation['roleBased'].upper() == "TRUE":
                 subprocess.call(["/usr/sbin/posAdmin", "--base", self.__buildLDAPBase(), "--add", "--scWorkstation", \
                     "--cn", workstation['cn'], "--ipHostNumber", workstation['ipAddress'], "--macAddress", workstation['macAddress'].upper(), \
                     "--scRoleBased", "TRUE", "--scRefPcDn", workstation['cashRegisterDN'], "--scPosRegisterType", workstation['cashRegisterType'], \
