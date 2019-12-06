@@ -63,6 +63,9 @@ class WorkstationModelParser:
                 self.__skip = True
                 return
 
+    def closeUp(self):
+        self.__addWorkstation()
+
     def getWorkstations(self):
         return self.__workstations
 
@@ -132,6 +135,7 @@ class WorkstationFileReader:
         with open(self.__filename) as f:
             for line in f:
                 workstationModelParser.insertAttribute(line)
+            workstationModelParser.closeUp()
 
 
 class WorkstationCreator:
