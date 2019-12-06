@@ -1,4 +1,4 @@
-# pySLEPOSWorkstation
+# pySLEPOSWorkstation [![Actions Status](https://github.com/gpoppino/pySLEPOSWorkstation/workflows/pySLEPOSWorkstation/badge.svg)](https://github.com/gpoppino/pySLEPOSWorkstation/actions)
 
 Creates SLEPOS workstations in batch from a text file.
 
