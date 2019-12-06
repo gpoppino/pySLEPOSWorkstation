@@ -55,15 +55,19 @@ class TestModelParser(unittest.TestCase):
 
     def test_Workstations(self):
         self.assertEqual(self.__workstationModelParser.getWorkstations(), \
-            [{'cn': 'REG040', 'ipAddress': '192.168.1.21', 'macAddress': '52:55:00:58:12:73', 'cashRegisterType': 'NCR7600-1001-8801', \
-                'cashRegisterDN': 'cn=CR-NCR7600-1001-8801,cn=RoleOneScreen,cn=global,o=myorg,c=ar', 'roleBased': 'True', \
-                    'roleDN': 'cn=RoleOneScreen,cn=global,o=myorg,c=ar'},
-             {'cn': 'REG041', 'ipAddress': '192.168.1.22', 'macAddress': '52:58:00:53:12:71', 'cashRegisterType': 'NCR7600-2000-8801', \
-                'cashRegisterDN': 'cn=CR-NCR7600-2000-8801,cn=global,o=myorg,c=ar', 'roleBased': 'False'}])
+            [{'cn': 'REG040', 'ipAddress': '192.168.1.21', 'macAddress': '52:55:00:58:12:73', \
+                'cashRegisterType': 'NCR7600-1001-8801', \
+                    'cashRegisterDN': 'cn=CR-NCR7600-1001-8801,cn=RoleOneScreen,cn=global,o=myorg,c=ar', \
+                        'roleBased': 'True', 'roleDN': 'cn=RoleOneScreen,cn=global,o=myorg,c=ar'},
+             {'cn': 'REG041', 'ipAddress': '192.168.1.22', 'macAddress': '52:58:00:53:12:71', \
+                 'cashRegisterType': 'NCR7600-2000-8801', \
+                     'cashRegisterDN': 'cn=CR-NCR7600-2000-8801,cn=global,o=myorg,c=ar', 'roleBased': 'False'}])
 
     def test_Branch(self):
-        self.assertEqual(self.__workstationModelParser.getBranch(), {'c':'ar', 'o': 'myorg', 'ou': 'myou', 'store': 'mystore'})
-        self.assertNotEqual(self.__workstationModelParser.getBranch(), {'c':'pe', 'o': 'myorg', 'ou': 'myou', 'store': 'mystore'})
+        self.assertEqual(self.__workstationModelParser.getBranch(), {'c':'ar', 'o': 'myorg', 'ou': 'myou', \
+            'store': 'mystore'})
+        self.assertNotEqual(self.__workstationModelParser.getBranch(), {'c':'pe', 'o': 'myorg', 'ou': 'myou', \
+            'store': 'mystore'})
 
 if __name__ == '__main__':
     unittest.main()
