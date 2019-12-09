@@ -29,6 +29,7 @@ class WorkstationModelParser:
         self.__branchDict = {}
         self.__currentWorkstationDict = {}
         self.__workstations = []
+        self.__skippedWorkstations = []
         self.__skip = False
 
         self.__modelValidator = ModelValidator()
@@ -60,6 +61,10 @@ class WorkstationModelParser:
             if self.__modelValidator.validateWorkstationValue(data[0], value):
                 self.__currentWorkstationDict[ data[0] ] = value
             else:
+                if 'cn' in self.__currentWorkstationDict.keys():
+                   self.__skippedWorkstations.append(self.__currentWorkstationDict['cn'])
+                else:
+                    self.__skippedWorkstations.append(self.__currentWorkstationDict)
                 self.__skip = True
                 return
 
@@ -68,6 +73,9 @@ class WorkstationModelParser:
 
     def getWorkstations(self):
         return self.__workstations
+
+    def getSkippedWorkstations(self):
+        return self.__skippedWorkstations
 
     def getBranch(self):
         return self.__branchDict
@@ -140,16 +148,17 @@ class WorkstationFileReader:
 
 class WorkstationCreator:
 
-    def __init__(self, branch, workstations):
+    def __init__(self, branch, workstations, skippedWorkstations):
         self.__branch = branch
         self.__workstations = workstations
+        self.__skippedWorkstations = skippedWorkstations
 
     def __buildLDAPBase(self):
         return "cn=" + self.__branch['store'] + ",ou=" + self.__branch['ou'] + ",o=" + self.__branch['o'] + ",c=" + self.__branch['c']
 
     def createWorkstations(self):
 
-        resultsProcessor = ResultsProcessor(self.__branch)
+        resultsProcessor = ResultsProcessor(self.__branch, self.__skippedWorkstations)
 
         for workstation in self.__workstations:
             posAdminCmd = ["/usr/sbin/posAdmin", "--base", self.__buildLDAPBase(), "--add", "--scWorkstation", \
@@ -170,11 +179,12 @@ class WorkstationCreator:
 
 class ResultsProcessor:
 
-    def __init__(self, branch):
+    def __init__(self, branch, skippedWorkstations):
         self.__branch = branch
         self.__failedCounter = 0
         self.__addedWorkstations = []
         self.__failedWorkstations = []
+        self.__skippedWorkstations = skippedWorkstations
 
     def showResult(self, workstation, retValue):
         msg = "Store: " + self.__branch['store'] + ". Workstation: " + workstation['cn']
@@ -194,6 +204,8 @@ class ResultsProcessor:
         print("Failed workstations:")
         print(self.__failedWorkstations)
         print("Failed counter: %d"% self.__failedCounter)
+        print("Skipped workstations:")
+        print(self.__skippedWorkstations)
 
 
 def showHelp(cmd):
@@ -226,7 +238,8 @@ def main(argv):
         print("Incomplete or invalid data in model file! Aborting...")
         return 1
 
-    workstationCreator = WorkstationCreator(workstationModelParser.getBranch(), workstationModelParser.getWorkstations())
+    workstationCreator = WorkstationCreator(workstationModelParser.getBranch(), \
+        workstationModelParser.getWorkstations(), workstationModelParser.getSkippedWorkstations())
     workstationCreator.createWorkstations()
 
 if __name__ == "__main__":
