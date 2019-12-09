@@ -111,13 +111,13 @@ class ModelValidator:
     def isIPv4Address(self, ipAddress):
         try:
             socket.inet_pton(socket.AF_INET, ipAddress)
-        except AttributeError:  # no inet_pton here, sorry
+        except AttributeError:
             try:
                 socket.inet_aton(ipAddress)
             except socket.error:
                 return False
             return ipAddress.count('.') == 3
-        except socket.error:  # not a valid address
+        except socket.error:
             return False
 
         return True
@@ -197,7 +197,7 @@ class ResultsProcessor:
 
 
 def showHelp(cmd):
-    print cmd + " -i model"
+    print(cmd + " -i model")
 
 def getStoreModelFile(argv):
 
@@ -223,7 +223,7 @@ def main(argv):
     workstationFileReader.populateModel(workstationModelParser)
 
     if not workstationModelParser.validate():
-        print("Imcomplete or invalid data in model file! Aborting...")
+        print("Incomplete or invalid data in model file! Aborting...")
         return 1
 
     workstationCreator = WorkstationCreator(workstationModelParser.getBranch(), workstationModelParser.getWorkstations())
