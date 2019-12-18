@@ -45,6 +45,12 @@ class TestModelValidator(unittest.TestCase):
         branchInComplete = {'o': 'home', 'ou': 'desk', 'store': 'computer'}
         self.assertTrue(branchInComplete)
 
+    def test_hasDuplicateIPAddresses(self):
+        self.assertTrue(self.__modelValidator.hasDuplicateIPAddresses([{'ipAddress': '192.168.1.22'}, {'ipAddress': '192.168.1.22'}, \
+            {'ipAddress': '192.168.1.23'}]))
+        self.assertFalse(self.__modelValidator.hasDuplicateIPAddresses([{'ipAddress': '192.168.1.21'}, {'ipAddress': '192.168.1.22'}, \
+            {'ipAddress': '192.168.1.23'}]))
+
 class TestModelParser(unittest.TestCase):
 
     def setUp(self):

@@ -81,7 +81,8 @@ class WorkstationModelParser:
         return self.__branchDict
 
     def validate(self):
-        return self.__modelValidator.isBranchComplete(self.__branchDict)
+        return self.__modelValidator.isBranchComplete(self.__branchDict) and \
+            not self.__modelValidator.hasDuplicateIPAddresses(self.__workstations)
 
     def __repr__(self):
         return "Branch: %s\nWorkstations: %s" % (self.__branchDict, self.__workstations)
@@ -132,6 +133,17 @@ class ModelValidator:
 
     def isMACAddress(self, mac):
         return re.match("[0-9a-f]{2}([-:]?)[0-9a-f]{2}(\\1[0-9a-f]{2}){4}$", mac.lower())
+
+    def hasDuplicateIPAddresses(self, workstations):
+        IPs = []
+        for workstation in workstations:
+            IPs.append(workstation['ipAddress'])
+        sIPs = list(set(IPs))
+
+        IPs.sort()
+        sIPs.sort()
+
+        return IPs != sIPs
 
 
 class WorkstationFileReader:
